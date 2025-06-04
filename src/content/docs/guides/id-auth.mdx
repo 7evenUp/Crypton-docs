@@ -1,0 +1,208 @@
+---
+title: ID Auth
+description: ID Auth docs
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components"
+
+Дока по интеграции формы авторизации с id.crypton.xyz
+
+Примеры только с `pnpm`, ибо кто до сих пор мусором пользуется?
+Раздельно зависимости распишу, чтоб сами понимали чо устанавливаем
+
+## Устанавливаем зависимости
+
+Зависимости для работы с формами:
+
+<Tabs syncKey="pkg">
+<TabItem label="pnpm">
+
+```sh
+pnpm add react-hook-form @hookform/resolvers @radix-ui/react-slot zod
+```
+
+</TabItem>
+</Tabs>
+
+Зависимости для интеграции Web3:
+
+<Tabs syncKey="pkg">
+<TabItem label="pnpm">
+
+```sh
+pnpm add @reown/appkit @reown/appkit-adapter-wagmi wagmi viem @tanstack/react-query
+```
+
+</TabItem>
+</Tabs>
+
+:::tip
+Ранее были либы что-то вроде `web3modal` и прочее. Так что удаляйте неиспользуемый мусор после этого. Вот [дока](https://docs.reown.com/appkit/overview) новой либы.
+:::
+
+Прочее:
+
+<Tabs syncKey="pkg">
+<TabItem label="pnpm">
+
+```sh
+pnpm add axios react-device-detect clsx @radix-ui/react-checkbox input-otp date-fns
+```
+
+</TabItem>
+</Tabs>
+
+## Source-code
+
+Качаем zip-файлик: <a href="/AuthContainer.zip" download="Id-Auth">Файлик</a>
+
+Распаковываем, и папочку `AuthContainer` к себе в `src` куда-нибудь кладём
+
+## Знакомство со структурой
+
+Имеем:
+
+```txt
+.
+├── api
+│   ├── index.ts (Тут апишка описана)
+│   └── types.ts (Тут типизация апишки)
+├── components (не буду расписывать)
+├── shared
+│   ├── Button
+│   ├── Checkbox
+│   ├── Form (взял у shadcn-ui)
+│   ├── Input
+│   ├── InputOTP (тоже у shadcn-ui взял)
+│   └── Loader (иконка-лоадер)
+├── AuthContext.tsx
+├── index.tsx
+├── styles.css
+└── useTranslate.tsx
+```
+
+Из `index.tsx` экспортирутеся `AuthContainer`, который необходимо интегрировать в модалку или где там в вашем сервисе используется ID форма авторизации
+
+```tsx
+<AuthContainer refetchAfterSuccessAuth={() => refetch()} lang={lang || "ru"} />
+```
+
+- `refetchAfterSuccessAuth` - это колбэк, который вызывается при успешной авторизации (верно ввели код с почты, или через кошель вошли). Тут необходимо сделать refetch необходимых данных, у вас это `get-jwt` наверно какой-нибудь. В моём случае `refetch()` дёргает `GET /profile`
+
+- `lang` - язык сайта. Чтоб не париться с переводами и прочее, сделал тут локальный файлик с переводами `useTranslate.tsx`. Вам остаётся лишь прокинуть пропс языка вашего сервиса
+
+## Работа с API
+
+Идём в `api/index.ts` и видим:
+
+```js
+const api = axios.create({
+  baseURL: "/api/v1",
+  withCredentials: true,
+})
+```
+
+В моём случае на айдишке есть проксирование, поэтому тут `/api/` заменяется на необходимый URL
+
+Вот проксирование в моём `vite.config.ts`:
+
+```js
+return {
+  ...,
+  server: {
+    proxy: {
+      "/api": {
+        target: env.VITE_API_BASE_URL,
+        changeOrigin: true,
+        secure: true,
+      },
+    },
+  },
+  ...
+}
+```
+
+Если проксирование у вас есть, то `baseURL` необходимо корректно настроить, если проксирования нет, то прям сюда сразу енву с доменом айдишки запихиваем
+
+## Web3
+
+Теперь наш любимый Web3
+
+Как видим из раздела с зависимостями, мы перешли на новую либу `reown/appkit`
+
+В вашем `Providers.tsx` или где вы там все провайдеры указываете, вставляем такое:
+
+```tsx
+// Какой-то код
+
+import { createAppKit } from "@reown/appkit/react"
+import { WagmiProvider } from "wagmi"
+import { mainnet } from "@reown/appkit/networks"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { WagmiAdapter } from "@reown/appkit-adapter-wagmi"
+
+const queryClient = new QueryClient()
+
+// У вас енва по другому может называться
+const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID
+
+const metadata = {
+  name: "Crypton ID",
+  description: "Personal Cabinet for Crypton",
+  url: "https://id.crypton.xyz",
+  icons: ["https://id.crypton.xyz/apple-touch-icon.png"],
+}
+
+const wagmiAdapter = new WagmiAdapter({
+  networks: [mainnet],
+  projectId,
+  ssr: false,
+})
+
+createAppKit({
+  adapters: [wagmiAdapter],
+  networks: [mainnet],
+  projectId,
+  metadata,
+  features: {
+    analytics: true, // Optional - defaults to your Cloud configuration
+    email: false,
+    emailShowWallets: false,
+    socials: false,
+  },
+  featuredWalletIds: [
+    "c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96",
+    "4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0",
+    "18388be9ac2d02726dbac9777c96efaac06d744b2f6d580fccdd4127a6d01fd1",
+  ],
+})
+
+// Какой-то код
+
+const Providers = ({ children }: { children: React.ReactNode }) => {
+  return (
+    // Какие-то другие провайдеры
+    <WagmiProvider config={wagmiAdapter.wagmiConfig}>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </WagmiProvider>
+    // Какие-то другие провайдеры
+  )
+}
+```
+
+Вуа-ля, web3 настроили
+
+## Стилизация
+
+В теории у вас уже есть работающая форма авторизации
+
+Если что-то выглядит не оч, или необходимо подстроить под UI систему своего сервиса, то вот вводные:
+
+- Размер AuthContainer - `300px на 436px` (Чтоб на всех экранах выглядело норм и не надо было упарываться в адаптивность)
+- Все стили написаны в обычных `.css` файлах, которые лежат рядом со своим компонентом
+- У всех класнеймов есть приписка `id_crypton_`, чтобы не создавать конфликтов с вашими стилями
+- Если не устраивает цвет текста на светлой/тёмной теме, то ищем нужный `styles.css` и ручками ставим свои значения
+
+## В заключение
+
+Ну вроде всё расписал, если чо-то не заводится или есть вопросы, то мне пишите
