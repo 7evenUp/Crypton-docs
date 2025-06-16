@@ -4,6 +4,7 @@ description: ID Auth docs
 ---
 
 import { Tabs, TabItem } from "@astrojs/starlight/components"
+import { FileTree } from "@astrojs/starlight/components"
 
 Дока по интеграции формы авторизации с id.crypton.xyz
 
@@ -62,24 +63,25 @@ pnpm add axios react-device-detect clsx @radix-ui/react-checkbox input-otp date-
 
 Имеем:
 
-```txt
-.
-├── api
-│   ├── index.ts (Тут апишка описана)
-│   └── types.ts (Тут типизация апишки)
-├── components (не буду расписывать)
-├── shared
-│   ├── Button
-│   ├── Checkbox
-│   ├── Form (взял у shadcn-ui)
-│   ├── Input
-│   ├── InputOTP (тоже у shadcn-ui взял)
-│   └── Loader (иконка-лоадер)
-├── AuthContext.tsx
-├── index.tsx
-├── styles.css
-└── useTranslate.tsx
-```
+<FileTree>
+
+- api
+  - index.ts (Тут апишка описана)
+  - types.ts (Тут типизация апишки)
+- components/ (не буду расписывать)
+- shared
+  - Button/
+  - Checkbox/
+  - Form/ (взял у shadcn-ui)
+  - Input/
+  - InputOTP/ (тоже у shadcn-ui взял)
+  - Loader/ (иконка-лоадер)
+- AuthContext.tsx
+- **index.tsx**
+- styles.css
+- useTranslate.tsx
+
+</FileTree>
 
 Из `index.tsx` экспортирутеся `AuthContainer`, который необходимо интегрировать в модалку или где там в вашем сервисе используется ID форма авторизации
 
