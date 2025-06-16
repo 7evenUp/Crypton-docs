@@ -3,4 +3,66 @@ title: ID Search Params
 description: ID Search Params
 ---
 
-Скоро сделаю
+Дока по Search параметрам на id.crypton.xyz
+
+## Открываем модалки
+
+За открытие модалок отвечает параметр `open_modal`, ссылка в таком случае будет иметь вид: `https://id.crypton.xyz?open_modal={необходимая модалка}`
+
+### buy_prime
+
+Модалка с покупкой подписки Prime
+
+`https://id.crypton.xyz?open_modal=buy_prime`
+
+### buy_calendar
+
+Модалка с покупкой подписки Pro (бывш. Календарь)
+
+`https://id.crypton.xyz?open_modal=buy_calendar`
+
+### topup
+
+Модалка с пополнением баланса
+
+`https://id.crypton.xyz?open_modal=topup`
+
+### referral_system
+
+Модалка с информацией о реф. системе
+
+`https://id.crypton.xyz?open_modal=referral_system`
+
+### newsletter
+
+Модалка с подпиской на почтовую рассылку
+
+`https://id.crypton.xyz?open_modal=newsletter`
+
+## Открываем разделы
+
+За открытие разделов отвечает параметр `open_tab`, ссылка в таком случае будет иметь вид: `https://id.crypton.xyz?open_tab={необходимый раздел}`
+
+### products
+
+Открывает раздел с продуктами экосистемы Crypton
+
+`https://id.crypton.xyz?open_tab=products`
+
+### inventory
+
+Открывает раздел с инвентарём пользователя
+
+`https://id.crypton.xyz?open_tab=inventory`
+
+### store
+
+Открывает раздел с магазином Crypton Points
+
+`https://id.crypton.xyz?open_tab=store`
+
+## Комбинирование
+
+Можно комбинировать параметры, если, допустим, необходимо открыть и "Инвентарь", и модалку с пополнением баланса
+
+`https://id.crypton.xyz?open_modal=topup&open_tab=inventory`
